@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [forms, setForms] = useState<Form[]>([]);
   const [formsLoading, setFormsLoading] = useState(true);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
-  
+
   // Filter states with enhanced options
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -43,22 +43,24 @@ export default function Dashboard() {
 
   const fetchForms = async () => {
     try {
-      // Fetch forms with question count
+      // Fetch forms with question count and response count
       const { data: formsData, error: formsError } = await supabase
         .from('forms')
         .select(`
           *,
-          questions(count)
+          questions(count),
+          form_responses(count)
         `)
+        .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (formsError) throw formsError;
 
-      // Transform the data to include question_count
+      // Transform the data to include question_count and response_count
       const formsWithCounts = formsData?.map(form => ({
         ...form,
         question_count: form.questions?.[0]?.count || 0,
-        response_count: Math.floor(Math.random() * 50), // TODO: Add actual response count query
+        response_count: form.form_responses?.[0]?.count || 0,
         is_quiz: form.is_quiz || false
       })) || [];
 
@@ -166,7 +168,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PersonalizedHeader 
+        <PersonalizedHeader
           totalForms={forms.length}
           totalResponses={totalResponses}
         />
@@ -176,13 +178,13 @@ export default function Dashboard() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : forms.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             onCreateForm={handleCreateForm}
             onUseTemplate={() => setTemplateSelectorOpen(true)}
           />
         ) : (
           <>
-            <AnalyticsSummary 
+            <AnalyticsSummary
               totalForms={forms.length}
               totalResponses={totalResponses}
               avgCompletionRate={avgCompletionRate}
@@ -190,9 +192,9 @@ export default function Dashboard() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h2 className="text-2xl font-bold text-foreground">Your Forms & Exams</h2>
-              
+
               <div className="flex gap-3">
-                <Button 
+                <Button
                   onClick={() => navigate('/templates')}
                   variant="outline"
                   className="flex items-center space-x-2 hover:bg-accent hover:scale-105 transition-all duration-200"
@@ -230,7 +232,7 @@ export default function Dashboard() {
             />
 
             {filteredAndSortedForms.length === 0 ? (
-              <EmptyState 
+              <EmptyState
                 onCreateForm={handleCreateForm}
                 onUseTemplate={() => setTemplateSelectorOpen(true)}
                 title="No forms match your filters"
@@ -238,7 +240,7 @@ export default function Dashboard() {
                 showTemplateButton={false}
               />
             ) : (
-              <SectionedFormDisplay 
+              <SectionedFormDisplay
                 forms={filteredAndSortedForms}
                 onDelete={handleDeleteForm}
               />

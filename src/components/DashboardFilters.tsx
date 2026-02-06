@@ -36,44 +36,34 @@ export function DashboardFilters({
   hasActiveFilters
 }: DashboardFiltersProps) {
   return (
-    <div className="bg-white/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+    <div className="bg-white border border-slate-200 rounded-xl p-2 mb-8 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
-              placeholder="Search forms and exams..."
+              placeholder="Search forms..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 border-border/50 focus:border-primary transition-all duration-200 bg-background/50"
+              className="pl-10 h-11 border-transparent bg-slate-50 focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all duration-200 rounded-lg placeholder:text-slate-400 font-medium"
             />
           </div>
-          
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
             <Select value={typeFilter} onValueChange={onTypeChange}>
-              <SelectTrigger className="w-36 border-border/50 hover:border-primary transition-colors bg-background/50">
+              <SelectTrigger className="w-full sm:w-[140px] h-11 border-transparent bg-slate-50 hover:bg-slate-100 focus:ring-2 focus:ring-violet-100 font-medium text-slate-700 rounded-lg">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="form">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Forms
-                  </div>
-                </SelectItem>
-                <SelectItem value="exam">
-                  <div className="flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4" />
-                    Exams
-                  </div>
-                </SelectItem>
+                <SelectItem value="form">Forms</SelectItem>
+                <SelectItem value="exam">Exams</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-36 border-border/50 hover:border-primary transition-colors bg-background/50">
-                <Filter className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-full sm:w-[140px] h-11 border-transparent bg-slate-50 hover:bg-slate-100 focus:ring-2 focus:ring-violet-100 font-medium text-slate-700 rounded-lg">
+                <Filter className="h-4 w-4 mr-2 text-slate-400" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -85,8 +75,8 @@ export function DashboardFilters({
             </Select>
 
             <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className="w-48 border-border/50 hover:border-primary transition-colors bg-background/50">
-                <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-full sm:w-[180px] h-11 border-transparent bg-slate-50 hover:bg-slate-100 focus:ring-2 focus:ring-violet-100 font-medium text-slate-700 rounded-lg">
+                <ArrowUpDown className="h-4 w-4 mr-2 text-slate-400" />
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -103,13 +93,13 @@ export function DashboardFilters({
 
         {hasActiveFilters && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="flex items-center hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 hover:scale-105"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-11 px-4 rounded-lg font-medium transition-colors whitespace-nowrap"
           >
-            <X className="h-4 w-4 mr-1" />
-            Clear All
+            <X className="h-4 w-4 mr-2" />
+            Clear filters
           </Button>
         )}
       </div>

@@ -1,25 +1,24 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  QrCode, 
-  BarChart3, 
-  Copy,
-  Calendar,
-  Users,
-  MessageSquare,
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
+import {
   MoreHorizontal,
-  FileText,
-  FlaskConical,
-  Star,
-  
+  Edit3,
+  Eye,
+  BarChart2,
+  Trash2,
+  Share2,
+  Clock,
+  QrCode
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { FormShare } from '@/components/FormShare';
@@ -32,12 +31,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 type Form = Tables<'forms'> & {
   is_quiz?: boolean;
@@ -48,299 +43,149 @@ type Form = Tables<'forms'> & {
 interface PremiumFormCardProps {
   form: Form;
   onDelete: (formId: string) => void;
-  onStatusChange?: () => void;
 }
 
-export function PremiumFormCard({ form, onDelete, onStatusChange }: PremiumFormCardProps) {
+export function PremiumFormCard({ form, onDelete }: PremiumFormCardProps) {
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
-      return;
-    }
+  const handleDelete = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!confirm('Are you sure? This will permanently delete the form and all responses.')) return;
 
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('forms')
-        .delete()
-        .eq('id', form.id);
-
+      const { error } = await supabase.from('forms').delete().eq('id', form.id);
       if (error) throw error;
-
       onDelete(form.id);
-      toast({
-        title: "Success",
-        description: "Form deleted successfully.",
-      });
+      toast({ title: "Deleted", description: "Form moved to trash." });
     } catch (error) {
-      console.error('Error deleting form:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete form. Please try again.",
-        variant: "destructive",
-      });
+      console.error(error);
+      toast({ title: "Error", description: "Could not delete form.", variant: "destructive" });
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const copyFormLink = () => {
-    const url = `${window.location.origin}/forms/${form.id}/view`;
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Copied!",
-      description: "Form link copied to clipboard.",
-    });
+  const statusColors = {
+    published: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    draft: "bg-slate-100 text-slate-600 border-slate-200",
+    closed: "bg-rose-100 text-rose-700 border-rose-200"
   };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'default';
-      case 'draft':
-        return 'secondary';
-      case 'closed':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const isExam = form.is_quiz || false;
+  const isExam = form.is_quiz;
 
   return (
-    <TooltipProvider>
-      <Card 
-        className={`group relative overflow-hidden transition-all duration-300 ease-out cursor-pointer 
-          hover:shadow-xl hover:-translate-y-2 hover:scale-[1.02] 
-          bg-gradient-to-br from-background via-background to-background/50
-          backdrop-blur-sm border-border/50 hover:border-border
-          ${isExam 
-            ? "hover:shadow-purple-500/20 hover:border-purple-300/50" 
-            : "hover:shadow-blue-500/20 hover:border-blue-300/50"
-          }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+    <>
+      <Card
+        onClick={() => navigate(`/forms/${form.id}/edit`)}
+        className="group relative border border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(139,92,246,0.12)] hover:border-violet-500 hover:-translate-y-[2px] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-xl flex flex-col h-full overflow-hidden cursor-pointer"
       >
+        {/* Top Decor Bar */}
+        <div className={cn(
+          "absolute top-0 left-0 w-full h-1",
+          isExam ? "bg-gradient-to-r from-violet-500 to-fuchsia-500" : "bg-gradient-to-r from-blue-500 to-cyan-500"
+        )} />
 
-      {/* Glassmorphism overlay on hover */}
-      <div className={`absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
-        isExam ? "from-purple-500/5" : "from-blue-500/5"
-      }`} />
-
-      <CardHeader className="pb-4 relative z-10">
-        <div className="flex justify-between items-start">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`p-2 rounded-xl ${
-                isExam 
-                  ? "bg-purple-100 text-purple-700 group-hover:bg-purple-200" 
-                  : "bg-blue-100 text-blue-700 group-hover:bg-blue-200"
-              } transition-colors`}>
-                {isExam ? (
-                  <FlaskConical className="h-5 w-5" />
-                ) : (
-                  <FileText className="h-5 w-5" />
+        <CardHeader className="p-5 pb-2 pt-6">
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border", statusColors[form.status as keyof typeof statusColors] || statusColors.draft)}>
+                  {form.status}
+                </Badge>
+                {isExam && (
+                  <Badge variant="outline" className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-600 border-violet-100 rounded-md">
+                    Exam Mode
+                  </Badge>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                  {form.title}
-                </h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge 
-                    variant={getStatusVariant(form.status)}
-                    className="capitalize text-xs font-medium"
-                  >
-                    {form.status}
-                  </Badge>
-                  {isExam && (
-                    <Badge variant="outline" className="text-purple-600 border-purple-300 bg-purple-50">
-                      🧪 Exam
-                    </Badge>
-                  )}
-                </div>
+              <h3 className="text-[18px] font-bold text-slate-900 leading-tight line-clamp-1 group-hover:text-violet-600 transition-colors">
+                {form.title}
+              </h3>
+              <p className="text-[14px] text-slate-500 line-clamp-2 min-h-[2.6em] leading-[1.4]">
+                {form.description || "No description provided."}
+              </p>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg focus-visible:ring-2 focus-visible:ring-violet-500">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/forms/${form.id}/edit`); }} className="cursor-pointer">
+                  <Edit3 className="mr-2 h-4 w-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShowShareDialog(true); }} className="cursor-pointer">
+                  <Share2 className="mr-2 h-4 w-4" /> Share
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleDelete} className="text-rose-600 focus:text-rose-600 cursor-pointer">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-5 pt-2 flex-grow flex flex-col justify-end">
+          {/* Metrics Row */}
+          <div className="border-t border-slate-100 pt-3 mt-4 flex items-center justify-between">
+            <div className="flex gap-6">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[16px] font-bold text-slate-900">{form.response_count || 0}</span>
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Responses</span>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[16px] font-bold text-slate-900">{form.question_count || 0}</span>
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Questions</span>
               </div>
             </div>
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`h-8 w-8 p-0 transition-all duration-200 ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                } group-hover:opacity-100 hover:bg-background/80 hover:scale-110`}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to={`/forms/${form.id}/edit`} className="flex items-center">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit {isExam ? 'Exam' : 'Form'}
-                </Link>
-              </DropdownMenuItem>
-              {form.status === 'published' && (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link to={`/forms/${form.id}/view`} className="flex items-center">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to={`/forms/${form.id}/responses`} className="flex items-center">
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Analytics
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={copyFormLink}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Link
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {form.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mt-2 leading-relaxed">
-            {form.description}
-          </p>
-        )}
-      </CardHeader>
-      
-      <CardContent className="pt-0 relative z-10">
-        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4 gap-4">
-          <div className="flex items-center space-x-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(form.created_at)}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Created on {formatDate(form.created_at)}</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  {form.question_count || 0}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{form.question_count || 0} questions</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {form.response_count || 0}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{form.response_count || 0} responses</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            asChild 
-            className="flex-1 hover:bg-primary hover:text-primary-foreground transition-all duration-200 hover:scale-105"
+            <div className="flex items-center text-[13px] text-slate-400 gap-1.5" title={`Created: ${new Date(form.created_at).toLocaleDateString()}`}>
+              <Clock className="h-3.5 w-3.5" />
+              <span>{formatDistanceToNow(new Date(form.created_at))} ago</span>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <Button
+            onClick={() => navigate(`/forms/${form.id}/edit`)}
+            variant="default"
+            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white shadow-sm hover:shadow-md rounded-lg h-10 font-semibold text-sm transition-all"
           >
-            <Link to={`/forms/${form.id}/edit`}>
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
-            </Link>
+            Edit Form
           </Button>
-          
-          {form.status === 'published' && (
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" asChild className="hover:scale-105 transition-transform">
-                    <Link to={`/forms/${form.id}/view`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Preview form</p>
-                </TooltipContent>
-              </Tooltip>
-              
-              <Dialog>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="hover:scale-105 transition-transform">
-                        <QrCode className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Share & QR Code</p>
-                  </TooltipContent>
-                </Tooltip>
-                <DialogContent className="max-w-sm sm:max-w-md p-0 sm:p-4">
-                  <DialogHeader className="pb-0">
-                    <DialogTitle>Share "{form.title}"</DialogTitle>
-                    <DialogDescription className="text-xs">Copy the link or share the QR code.</DialogDescription>
-                  </DialogHeader>
-                  <FormShare formId={form.id} formTitle={form.title} />
-                </DialogContent>
-              </Dialog>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" asChild className="hover:scale-105 transition-transform">
-                    <Link to={`/forms/${form.id}/responses`}>
-                      <BarChart3 className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>View analytics</p>
-                </TooltipContent>
-              </Tooltip>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-    </TooltipProvider>
+          <Button onClick={() => navigate(`/forms/${form.id}/view`)} variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-slate-500 hover:bg-violet-50 hover:text-violet-600 border border-transparent hover:border-violet-100 transition-all" title="View">
+            <Eye className="h-4 w-4" />
+          </Button>
+
+          <Button onClick={() => navigate(`/forms/${form.id}/responses`)} variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-slate-500 hover:bg-violet-50 hover:text-violet-600 border border-transparent hover:border-violet-100 transition-all" title="Analytics">
+            <BarChart2 className="h-4 w-4" />
+          </Button>
+
+          <Button onClick={() => setShowShareDialog(true)} variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-slate-500 hover:bg-violet-50 hover:text-violet-600 border border-transparent hover:border-violet-100 transition-all" title="Share">
+            <QrCode className="h-4 w-4" />
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share "{form.title}"</DialogTitle>
+            <DialogDescription>
+              Share this form with your audience via link or QR code.
+            </DialogDescription>
+          </DialogHeader>
+          <FormShare formId={form.id} formTitle={form.title} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

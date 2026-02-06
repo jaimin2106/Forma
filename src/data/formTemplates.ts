@@ -16,6 +16,7 @@ interface FormTemplate {
     collect_email: boolean;
   };
   questions: Array<{
+    id: string;
     type: QuestionType;
     title: string;
     description: string;
@@ -39,6 +40,7 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'france-capital',
         type: 'multiple_choice',
         title: 'What is the capital of France?',
         description: 'Select the correct answer',
@@ -46,6 +48,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['London', 'Berlin', 'Paris', 'Madrid']
       },
       {
+        id: 'red-planet',
         type: 'multiple_choice',
         title: 'Which planet is known as the Red Planet?',
         description: 'Choose the correct option',
@@ -53,6 +56,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Venus', 'Mars', 'Jupiter', 'Saturn']
       },
       {
+        id: 'difficulty-rating',
         type: 'rating',
         title: 'How difficult was this quiz?',
         description: 'Rate from 1 (very easy) to 5 (very hard)',
@@ -74,12 +78,14 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'satisfaction-rating',
         type: 'rating',
         title: 'How satisfied are you with our product/service?',
         description: 'Rate from 1 (very unsatisfied) to 5 (very satisfied)',
         required: true,
       },
       {
+        id: 'recommendation-likelihood',
         type: 'multiple_choice',
         title: 'How likely are you to recommend us to others?',
         description: 'Select your likelihood',
@@ -87,12 +93,14 @@ export const formTemplates: FormTemplate[] = [
         options: ['Very likely', 'Likely', 'Neutral', 'Unlikely', 'Very unlikely']
       },
       {
+        id: 'what-liked-most',
         type: 'textarea',
         title: 'What did you like most about our product/service?',
         description: 'Please share your positive experience',
         required: false,
       },
       {
+        id: 'improvement-suggestions',
         type: 'textarea',
         title: 'What could we improve?',
         description: 'Your suggestions help us get better',
@@ -114,24 +122,28 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'full-name',
         type: 'text',
         title: 'Full Name',
         description: 'Enter your full name',
         required: true,
       },
       {
+        id: 'job-title',
         type: 'text',
         title: 'Job Title',
         description: 'Your current position',
         required: false,
       },
       {
+        id: 'company-org',
         type: 'text',
         title: 'Company/Organization',
         description: 'Where do you work?',
         required: false,
       },
       {
+        id: 'referral-source',
         type: 'dropdown',
         title: 'How did you hear about this event?',
         description: 'Select the source',
@@ -139,6 +151,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Social Media', 'Email Newsletter', 'Website', 'Word of mouth', 'Other']
       },
       {
+        id: 'topic-interests',
         type: 'checkbox',
         title: 'Which topics interest you most?',
         description: 'Select all that apply',
@@ -146,6 +159,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Technology', 'Business Strategy', 'Marketing', 'Design', 'Leadership']
       },
       {
+        id: 'special-reqs',
         type: 'textarea',
         title: 'Any special requirements or questions?',
         description: 'Let us know if you need any accommodations',
@@ -167,24 +181,28 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'applicant-name',
         type: 'text',
         title: 'Full Name',
         description: 'Enter your full legal name',
         required: true,
       },
       {
+        id: 'phone-number',
         type: 'text',
         title: 'Phone Number',
         description: 'Your contact number',
         required: true,
       },
       {
+        id: 'linkedin-profile',
         type: 'text',
         title: 'LinkedIn Profile',
         description: 'Your LinkedIn URL (optional)',
         required: false,
       },
       {
+        id: 'position-applied',
         type: 'dropdown',
         title: 'Position Applied For',
         description: 'Select the role you are applying for',
@@ -192,22 +210,26 @@ export const formTemplates: FormTemplate[] = [
         options: ['Software Engineer', 'Product Manager', 'Designer', 'Marketing Specialist', 'Sales Representative']
       },
       {
+        id: 'years-experience',
         type: 'number',
         title: 'Years of Experience',
         description: 'Total years of relevant work experience',
         required: true,
       },
       {
+        id: 'motivation',
         type: 'textarea',
         title: 'Why do you want to work with us?',
         description: 'Tell us what motivates you to join our team',
         required: true,
       },
       {
+        id: 'skills-experience',
         type: 'textarea',
         title: 'Relevant Skills and Experience',
         description: 'Describe your key skills and achievements',
         required: true,
+        options: []
       }
     ]
   },
@@ -225,12 +247,14 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'sender-name',
         type: 'text',
         title: 'Your Name',
         description: 'How should we address you?',
         required: true,
       },
       {
+        id: 'subject',
         type: 'dropdown',
         title: 'Subject',
         description: 'What is this message about?',
@@ -238,12 +262,14 @@ export const formTemplates: FormTemplate[] = [
         options: ['General Inquiry', 'Support Request', 'Feedback', 'Partnership', 'Other']
       },
       {
+        id: 'message-body',
         type: 'textarea',
         title: 'Message',
         description: 'Please describe your inquiry in detail',
         required: true,
       },
       {
+        id: 'response-preference',
         type: 'dropdown',
         title: 'Preferred Response Method',
         description: 'How would you like us to respond?',
@@ -266,12 +292,14 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'course-name',
         type: 'text',
         title: 'Course Name',
         description: 'Which course are you providing feedback for?',
         required: true,
       },
       {
+        id: 'content-organized',
         type: 'multiple_choice',
         title: 'The course content was well organized and easy to follow',
         description: 'Select your level of agreement',
@@ -279,6 +307,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree']
       },
       {
+        id: 'instructor-helpful',
         type: 'multiple_choice',
         title: 'The instructor was knowledgeable and helpful',
         description: 'Select your level of agreement',
@@ -286,6 +315,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree']
       },
       {
+        id: 'materials-useful',
         type: 'multiple_choice',
         title: 'The course materials were useful and relevant',
         description: 'Select your level of agreement',
@@ -293,18 +323,21 @@ export const formTemplates: FormTemplate[] = [
         options: ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree']
       },
       {
+        id: 'overall-rating',
         type: 'rating',
         title: 'Overall, how would you rate this course?',
         description: 'Rate from 1 (poor) to 5 (excellent)',
         required: true,
       },
       {
+        id: 'liked-most',
         type: 'textarea',
         title: 'What did you like most about the course?',
         description: 'Share the highlights',
         required: false,
       },
       {
+        id: 'improvement-ideas',
         type: 'textarea',
         title: 'What suggestions do you have for improvement?',
         description: 'Help us make the course better',
@@ -326,6 +359,7 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'preferred-time',
         type: 'multiple_choice',
         title: 'What is your preferred meeting time for our team events?',
         description: 'Select the option that works best for you',
@@ -348,12 +382,14 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'bug-title',
         type: 'text',
         title: 'Bug Title',
         description: 'A brief, descriptive title for the bug',
         required: true,
       },
       {
+        id: 'priority-level',
         type: 'dropdown',
         title: 'Priority Level',
         description: 'How critical is this bug?',
@@ -361,6 +397,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Low', 'Medium', 'High', 'Critical']
       },
       {
+        id: 'bug-category',
         type: 'dropdown',
         title: 'Bug Category',
         description: 'What type of issue is this?',
@@ -368,24 +405,28 @@ export const formTemplates: FormTemplate[] = [
         options: ['UI/UX Issue', 'Functionality Problem', 'Performance Issue', 'Data Problem', 'Other']
       },
       {
+        id: 'steps-reproduce',
         type: 'textarea',
         title: 'Steps to Reproduce',
         description: 'Detailed steps to recreate the bug',
         required: true,
       },
       {
+        id: 'expected-behavior',
         type: 'textarea',
         title: 'Expected Behavior',
         description: 'What should have happened?',
         required: true,
       },
       {
+        id: 'actual-behavior',
         type: 'textarea',
         title: 'Actual Behavior',
         description: 'What actually happened instead?',
         required: true,
       },
       {
+        id: 'browser-device',
         type: 'text',
         title: 'Browser/Device Information',
         description: 'Which browser and device were you using?',
@@ -407,12 +448,14 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'first-name',
         type: 'text',
         title: 'First Name',
         description: 'Your first name',
         required: true,
       },
       {
+        id: 'interest-topics',
         type: 'checkbox',
         title: 'What topics interest you?',
         description: 'Select all that apply',
@@ -420,6 +463,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Product Updates', 'Industry News', 'Tips & Tutorials', 'Company News', 'Special Offers']
       },
       {
+        id: 'frequency-pref',
         type: 'dropdown',
         title: 'How often would you like to hear from us?',
         description: 'Choose your preferred frequency',
@@ -442,24 +486,28 @@ export const formTemplates: FormTemplate[] = [
     },
     questions: [
       {
+        id: 'volunteer-name',
         type: 'text',
         title: 'Full Name',
         description: 'Your complete name',
         required: true,
       },
       {
+        id: 'contact-number',
         type: 'text',
         title: 'Phone Number',
         description: 'Your contact number',
         required: true,
       },
       {
+        id: 'volunteer-age',
         type: 'number',
         title: 'Age',
         description: 'Your age (required for some activities)',
         required: false,
       },
       {
+        id: 'skills',
         type: 'checkbox',
         title: 'What skills can you contribute?',
         description: 'Select all that apply',
@@ -467,6 +515,7 @@ export const formTemplates: FormTemplate[] = [
         options: ['Event Planning', 'Social Media', 'Photography', 'Writing', 'Technical Support', 'Fundraising', 'Teaching/Training', 'Other']
       },
       {
+        id: 'availability',
         type: 'checkbox',
         title: 'When are you available?',
         description: 'Select your available time slots',
@@ -474,12 +523,14 @@ export const formTemplates: FormTemplate[] = [
         options: ['Weekday Mornings', 'Weekday Afternoons', 'Weekday Evenings', 'Weekend Mornings', 'Weekend Afternoons', 'Weekend Evenings']
       },
       {
+        id: 'motivation-vol',
         type: 'textarea',
         title: 'Why do you want to volunteer?',
         description: 'Tell us about your motivation',
         required: false,
       },
       {
+        id: 'prev-experience',
         type: 'textarea',
         title: 'Previous volunteer experience',
         description: 'Share any relevant experience (optional)',

@@ -19,10 +19,10 @@ export function UnifiedCreateButton({ onUseTemplate }: UnifiedCreateButtonProps)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
+        <Button className="h-[44px] px-6 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md active:scale-95 transition-all duration-150 flex items-center gap-2">
+          <Plus className="h-5 w-5" />
           <span>Create New</span>
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 ml-1 opacity-80" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

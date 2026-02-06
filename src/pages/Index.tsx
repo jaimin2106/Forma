@@ -1,14 +1,21 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { TrustSection } from "@/components/landing/TrustSection";
+import { DataGatheringSection } from "@/components/landing/DataGatheringSection";
+import { CustomizableSection } from "@/components/landing/CustomizableSection";
 import { TemplatesSection } from "@/components/landing/TemplatesSection";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { SecuritySection } from "@/components/landing/SecuritySection";
+import { CollaborativeSection } from "@/components/landing/CollaborativeSection";
+import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { TestimonialSection } from "@/components/landing/TestimonialSection";
 import { FinalCTASection } from "@/components/landing/FinalCTASection";
+import { Footer } from "@/components/landing/Footer";
+
+
+
+
 
 const Index = () => {
   const { user } = useAuth();
@@ -16,11 +23,17 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <HeroSection user={user} />
-      <FeaturesSection />
-      <HowItWorksSection />
+      <TrustSection />
+      <DataGatheringSection />
+      <CustomizableSection />
       <TemplatesSection />
-      <TestimonialsSection />
+      <SecuritySection />
+      <CollaborativeSection />
+      <IntegrationsSection />
+      <HowItWorksSection />
+      <TestimonialSection />
       <FinalCTASection user={user} />
+      <Footer/>
     </div>
   );
 };

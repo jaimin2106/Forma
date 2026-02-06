@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Share } from 'lucide-react';
+import { Eye, Share, Save, ArrowLeft, Settings } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { FormShare } from '@/components/FormShare';
 import FormSettings from '@/components/FormSettings';
 import QuestionsBuilder from '@/components/QuestionsBuilder';
 import type { Tables, Enums } from '@/integrations/supabase/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Form = Tables<'forms'>;
 type Question = Tables<'questions'>;
@@ -53,6 +54,8 @@ export default function FormBuilder() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("builder");
+
   const [form, setForm] = useState<FormData>({
     title: '',
     description: '',
@@ -70,13 +73,12 @@ export default function FormBuilder() {
   const [loadingForm, setLoadingForm] = useState(!!id);
   const [isPublished, setIsPublished] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date>();
+  const [savedFormId, setSavedFormId] = useState<string | null>(null);
 
-  // Calculate total MCQs
-  const totalMcqs = questions.filter(q => 
+  const totalMcqs = questions.filter(q =>
     ['multiple_choice', 'checkbox', 'dropdown'].includes(q.type)
   ).length;
 
-  // Update total_mcqs in form when questions change
   useEffect(() => {
     setForm(prev => ({ ...prev, total_mcqs: totalMcqs }));
   }, [totalMcqs]);
@@ -85,7 +87,6 @@ export default function FormBuilder() {
     if (user && id) {
       loadForm();
     } else if (user && !id) {
-      // Check if there's a template in the URL params
       const templateParam = searchParams.get('template');
       if (templateParam) {
         try {
@@ -93,11 +94,6 @@ export default function FormBuilder() {
           loadTemplate(template);
         } catch (error) {
           console.error('Error parsing template:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load template. Please try again.",
-            variant: "destructive",
-          });
         }
       }
     }
@@ -120,7 +116,6 @@ export default function FormBuilder() {
       min_correct_mcqs: template.form.min_correct_mcqs,
       total_mcqs: template.form.total_mcqs,
     });
-
     const templateQuestions = template.questions.map((q: any, index: number) => ({
       type: q.type,
       title: q.title,
@@ -132,26 +127,20 @@ export default function FormBuilder() {
       correct_answers: q.correct_answers || [],
       explanation: q.explanation || '',
     }));
-
     setQuestions(templateQuestions);
-
-    toast({
-      title: "Template Loaded",
-      description: `${template.name} template has been applied successfully.`,
-    });
+    toast({ title: "Template Loaded", description: `${template.name} template applied.` });
   };
 
   const loadForm = async () => {
     if (!id) return;
-
     try {
-      const { data: formData, error: formError } = await supabase
-        .from('forms')
-        .select('*')
-        .eq('id', id)
-        .single();
-
+      const { data: formData, error: formError } = await supabase.from('forms').select('*').eq('id', id).single();
       if (formError) throw formError;
+
+      // strict ownership check
+      if (formData.user_id !== user!.id) {
+        throw new Error("You do not have permission to edit this form.");
+      }
 
       setForm({
         title: formData.title,
@@ -170,17 +159,9 @@ export default function FormBuilder() {
         min_correct_mcqs: formData.min_correct_mcqs || undefined,
         total_mcqs: formData.total_mcqs || undefined,
       });
-
       setIsPublished(formData.status === 'published');
-
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('form_id', id)
-        .order('order_index');
-
+      const { data: questionsData, error: questionsError } = await supabase.from('questions').select('*').eq('form_id', id).order('order_index');
       if (questionsError) throw questionsError;
-
       setQuestions(questionsData.map(q => ({
         id: q.id,
         type: q.type,
@@ -195,32 +176,21 @@ export default function FormBuilder() {
       })));
     } catch (error) {
       console.error('Error loading form:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load form. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load form.", variant: "destructive" });
     } finally {
       setLoadingForm(false);
     }
   };
 
-  const saveForm = async () => {
+  const saveForm = async (): Promise<string | null> => {
     if (!form.title.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Form title is required.",
-        variant: "destructive",
-      });
-      return;
+      toast({ title: "Validation Error", description: "Form title is required.", variant: "destructive" });
+      return null;
     }
-
     setSaving(true);
-
     try {
       let formId = id;
       const totalPoints = form.is_quiz ? questions.reduce((sum, q) => sum + (q.points || 1), 0) : 0;
-
       const formUpdateData = {
         title: form.title,
         description: form.description,
@@ -241,34 +211,16 @@ export default function FormBuilder() {
       };
 
       if (id) {
-        // Update existing form
-        const { error: formError } = await supabase
-          .from('forms')
-          .update(formUpdateData)
-          .eq('id', id);
-
+        const { error: formError } = await supabase.from('forms').update(formUpdateData).eq('id', id);
         if (formError) throw formError;
       } else {
-        // Create new form
-        const { data: newForm, error: formError } = await supabase
-          .from('forms')
-          .insert({
-            ...formUpdateData,
-            user_id: user!.id,
-          })
-          .select()
-          .single();
-
+        const { data: newForm, error: formError } = await supabase.from('forms').insert({ ...formUpdateData, user_id: user!.id }).select().single();
         if (formError) throw formError;
         formId = newForm.id;
       }
 
-      // Delete existing questions and recreate them
-      if (id) {
-        await supabase.from('questions').delete().eq('form_id', id);
-      }
+      if (id) await supabase.from('questions').delete().eq('form_id', id);
 
-      // Insert questions
       if (questions.length > 0) {
         const questionsToInsert = questions.map(q => ({
           form_id: formId,
@@ -282,130 +234,173 @@ export default function FormBuilder() {
           correct_answers: form.is_quiz && q.correct_answers?.length ? q.correct_answers : null,
           explanation: form.is_quiz ? q.explanation : null,
         }));
-
-        const { error: questionsError } = await supabase
-          .from('questions')
-          .insert(questionsToInsert);
-
+        const { error: questionsError } = await supabase.from('questions').insert(questionsToInsert);
         if (questionsError) throw questionsError;
       }
 
       setLastSaved(new Date());
-      toast({
-        title: "Success",
-        description: `${form.is_quiz ? 'Quiz' : 'Form'} saved successfully!`,
-      });
-
-      if (!id) {
-        navigate(`/forms/${formId}/edit`);
-      }
+      toast({ title: "Saved", description: "Changes saved successfully." });
+      if (!id) navigate(`/forms/${formId}/edit`);
+      setSavedFormId(formId as string);
+      return formId as string;
     } catch (error) {
       console.error('Error saving form:', error);
-      toast({
-        title: "Error",
-        description: `Failed to save ${form.is_quiz ? 'quiz' : 'form'}. Please try again.`,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to save.", variant: "destructive" });
+      return null;
     } finally {
       setSaving(false);
     }
   };
 
   const publishForm = async () => {
-    if (!id) {
-      toast({
-        title: "Error",
-        description: `Please save the ${form.is_quiz ? 'quiz' : 'form'} first before publishing.`,
-        variant: "destructive",
-      });
-      return;
+    let formId = id;
+    if (!formId) {
+      const savedId = await saveForm();
+      if (!savedId) return;
+      formId = savedId;
     }
-
     try {
-      const { error } = await supabase
-        .from('forms')
-        .update({ status: 'published' })
-        .eq('id', id);
-
+      const { error } = await supabase.from('forms').update({ status: 'published' }).eq('id', formId);
       if (error) throw error;
-
       setIsPublished(true);
-      toast({
-        title: "Success",
-        description: `${form.is_quiz ? 'Quiz' : 'Form'} published successfully! You can now share it with others.`,
-      });
-    } catch (error) {
-      console.error('Error publishing form:', error);
-      toast({
-        title: "Error",
-        description: `Failed to publish ${form.is_quiz ? 'quiz' : 'form'}. Please try again.`,
-        variant: "destructive",
-      });
+      toast({ title: "Published", description: "Your form is now live." });
+    } catch (err) {
+      console.error('Error publishing form:', err);
+      toast({ title: "Error", description: "Failed to publish.", variant: "destructive" });
     }
   };
 
-  if (loading || loadingForm) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (loading || loadingForm) return <div className="flex justify-center items-center min-h-screen bg-slate-50"><div className="w-8 h-8 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 space-y-4 sm:space-y-0">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {id ? `Edit ${form.is_quiz ? 'Quiz' : 'Form'}` : `Create New ${form.is_quiz ? 'Quiz' : 'Form'}`}
-        </h1>
-        <div className="flex flex-wrap gap-3">
-          {id && (
-            <>
-              <Button onClick={publishForm} variant="outline" className="flex items-center space-x-2">
-                <Eye className="h-4 w-4" />
-                <span>Publish</span>
-              </Button>
-              {isPublished && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="flex items-center space-x-2">
-                      <Share className="h-4 w-4" />
-                      <span>Share</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Share Your {form.is_quiz ? 'Quiz' : 'Form'}</DialogTitle>
-                    </DialogHeader>
-                    <FormShare formId={id} formTitle={form.title} />
-                  </DialogContent>
-                </Dialog>
-              )}
-            </>
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      {/* Top Bar */}
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 h-[72px] px-6 md:px-8 flex items-center justify-between shadow-sm/50 backdrop-blur-sm bg-white/90 supports-[backdrop-filter]:bg-white/80">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="hover:bg-slate-100 rounded-full h-10 w-10">
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </Button>
+          <div className="flex flex-col justify-center h-full gap-0.5">
+            <h1 className="text-lg font-bold text-slate-900 leading-none">{form.title || 'Untitled Form'}</h1>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${isPublished ? 'bg-green-500' : 'bg-slate-300'}`} />
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                {isPublished ? 'Published' : 'Draft'}
+                <span className="text-slate-300">•</span>
+                {saving ? 'Saving...' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Unsaved changes'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => saveForm()}
+            variant="ghost"
+            disabled={saving}
+            className="text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100 px-4 h-10 rounded-lg transition-all"
+          >
+            {saving ? <span className="animate-spin mr-2">⏳</span> : <Save className="w-4 h-4 mr-2" />}
+            Save
+          </Button>
+
+          <Button
+            onClick={publishForm}
+            disabled={saving || isPublished}
+            className={`font-semibold h-10 px-6 rounded-lg transition-all shadow-sm active:scale-95 ${isPublished
+              ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+              : 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-md'
+              }`}
+          >
+            {isPublished ? (
+              <>
+                <Eye className="w-4 h-4 mr-2" /> Published
+              </>
+            ) : (
+              'Publish'
+            )}
+          </Button>
+
+          {(isPublished && (id || savedFormId)) && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10 text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-lg ml-2">
+                  <Share className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share Form</DialogTitle>
+                </DialogHeader>
+                <FormShare formId={id || savedFormId!} formTitle={form.title} />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="space-y-6">
-        <FormSettings
-          form={form}
-          onFormChange={setForm}
-          onSave={saveForm}
-          saving={saving}
-          lastSaved={lastSaved}
-          totalMcqs={totalMcqs}
-        />
+      {/* Main Content */}
+      <div className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8">
+        <Tabs defaultValue="builder" value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
+          <div className="flex justify-center sticky top-[80px] z-20 pointer-events-none">
+            <TabsList className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm p-1.5 rounded-full pointer-events-auto">
+              <TabsTrigger
+                value="builder"
+                className="rounded-full px-6 py-2 text-sm font-medium transition-all data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-900"
+              >
+                Builder
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="rounded-full px-6 py-2 text-sm font-medium transition-all data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm hover:text-slate-900"
+              >
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <QuestionsBuilder
-          questions={questions}
-          onQuestionsChange={setQuestions}
-          isQuiz={form.is_quiz}
-          timeLimit={form.time_limit_minutes}
-        />
+          <TabsContent value="builder" className="space-y-6 outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+            {/* Title & Description Card */}
+            {/* Title & Description Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-8 md:p-10 group transition-all hover:shadow-md">
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="Form Title"
+                className="w-full text-4xl md:text-5xl font-bold text-slate-900 placeholder:text-slate-300 border-none focus:outline-none focus:ring-0 bg-transparent tracking-tight mb-4"
+              />
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Form description (optional)"
+                className="w-full text-lg md:text-xl text-slate-600 placeholder:text-slate-300/70 border-none focus:outline-none focus:ring-0 bg-transparent font-light"
+              />
+            </div>
+
+            <QuestionsBuilder
+              questions={questions}
+              onQuestionsChange={setQuestions}
+              isQuiz={form.is_quiz}
+              timeLimit={form.time_limit_minutes}
+            />
+          </TabsContent>
+
+          <TabsContent value="settings" className="outline-none animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+            <div className="max-w-2xl mx-auto">
+              <FormSettings
+                form={form}
+                onFormChange={setForm}
+                onSave={saveForm}
+                saving={saving}
+                lastSaved={lastSaved}
+                totalMcqs={totalMcqs}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

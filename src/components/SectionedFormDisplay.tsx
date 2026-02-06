@@ -1,6 +1,6 @@
-
-import { useMemo } from 'react';
-import { EnhancedFormCard } from './EnhancedFormCard';
+"use client";
+import React, { useMemo } from 'react';
+import { PremiumFormCard } from './PremiumFormCard';
 import { FileText, FlaskConical } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -20,7 +20,7 @@ export function SectionedFormDisplay({ forms, onDelete, onStatusChange }: Sectio
   const { regularForms, exams } = useMemo(() => {
     const regular = forms.filter(form => !form.is_quiz);
     const quizzes = forms.filter(form => form.is_quiz);
-    
+
     return {
       regularForms: regular,
       exams: quizzes
@@ -32,28 +32,26 @@ export function SectionedFormDisplay({ forms, onDelete, onStatusChange }: Sectio
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       {regularForms.length > 0 && (
-        <section className="animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1 h-8 bg-primary rounded-full"></div>
-            <FileText className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">My Forms</h2>
-            <span className="text-xs text-muted-foreground bg-accent/30 px-2.5 py-1 rounded-full">
-              {regularForms.length} {regularForms.length === 1 ? 'form' : 'forms'}
+        <section className="animate-fade-in group/section">
+          <div className="flex items-center gap-3 mb-5 pl-1">
+            <div className="w-[6px] h-6 bg-blue-600 rounded-sm shadow-sm"></div>
+            <h2 className="text-lg font-bold text-slate-800 tracking-tight flex-1">Forms & Surveys</h2>
+            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 min-w-[24px] text-center">
+              {regularForms.length}
             </span>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {regularForms.map((form, index) => (
-              <div 
-                key={form.id} 
+              <div
+                key={form.id}
                 className="animate-scale-in"
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <EnhancedFormCard
+                <PremiumFormCard
                   form={form}
                   onDelete={onDelete}
-                  onStatusChange={onStatusChange}
                 />
               </div>
             ))}
@@ -62,26 +60,24 @@ export function SectionedFormDisplay({ forms, onDelete, onStatusChange }: Sectio
       )}
 
       {exams.length > 0 && (
-        <section className="animate-fade-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1 h-8 bg-primary rounded-full"></div>
-            <FlaskConical className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">My Exams</h2>
-            <span className="text-xs text-muted-foreground bg-accent/30 px-2.5 py-1 rounded-full">
-              {exams.length} {exams.length === 1 ? 'exam' : 'exams'}
+        <section className="animate-fade-in group/section mt-8">
+          <div className="flex items-center gap-3 mb-5 pl-1">
+            <div className="w-[6px] h-6 bg-violet-600 rounded-sm shadow-sm"></div>
+            <h2 className="text-lg font-bold text-slate-800 tracking-tight flex-1">Quizzes & Exams</h2>
+            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 min-w-[24px] text-center">
+              {exams.length}
             </span>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {exams.map((form, index) => (
-              <div 
-                key={form.id} 
+              <div
+                key={form.id}
                 className="animate-scale-in"
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <EnhancedFormCard
+                <PremiumFormCard
                   form={form}
                   onDelete={onDelete}
-                  onStatusChange={onStatusChange}
                 />
               </div>
             ))}

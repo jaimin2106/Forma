@@ -1,12 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Copy, Download, QrCode, Share } from 'lucide-react';
+import { Copy, Download, QrCode, Share2, Check, ExternalLink } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import QRCode from 'qrcode';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FormShareProps {
   formId: string;
@@ -16,6 +15,7 @@ interface FormShareProps {
 export function FormShare({ formId, formTitle }: FormShareProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [publicUrl, setPublicUrl] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     generateQRCode();
@@ -27,12 +27,13 @@ export function FormShare({ formId, formTitle }: FormShareProps) {
 
     try {
       const qrDataURL = await QRCode.toDataURL(url, {
-        width: 200,
+        width: 400,
         margin: 2,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+          dark: '#0f172a',
+          light: '#ffffff'
+        },
+        errorCorrectionLevel: 'H'
       });
       setQrCodeDataURL(qrDataURL);
     } catch (error) {
@@ -43,16 +44,14 @@ export function FormShare({ formId, formTitle }: FormShareProps) {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
       toast({
-        title: "Copied!",
-        description: "Form link copied to clipboard.",
+        title: "Link Copied",
+        description: "The form URL has been copied to your clipboard.",
       });
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy link to clipboard.",
-        variant: "destructive",
-      });
+      console.error("Failed to copy", error);
     }
   };
 
@@ -60,96 +59,99 @@ export function FormShare({ formId, formTitle }: FormShareProps) {
     if (!qrCodeDataURL) return;
 
     const link = document.createElement('a');
-    link.download = `${formTitle}-qr-code.png`;
+    link.download = `${formTitle.replace(/\s+/g, '-').toLowerCase()}-qr-code.png`;
     link.href = qrCodeDataURL;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
     toast({
-      title: "Downloaded!",
-      description: "QR code downloaded successfully.",
+      title: "QR Code Saved",
+      description: "The QR code image has been downloaded.",
     });
   };
 
-  const shareForm = async () => {
+  const shareNative = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: formTitle,
-          text: `Fill out this form: ${formTitle}`,
+          title: `Fill out: ${formTitle}`,
+          text: `I'd love your response on this form: ${formTitle}`,
           url: publicUrl,
         });
       } catch (error) {
         console.error('Error sharing:', error);
       }
     } else {
-      // Fallback: copy to clipboard
       copyToClipboard();
     }
   };
 
   return (
-    <Card className="border-border/60">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Share className="h-4 w-4 text-primary" />
-          <span>Share & QR</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Link + QR grid */}
-        <div className="grid gap-5 md:grid-cols-2">
-          {/* Public Link */}
-          <div className="space-y-2">
-            <Label>Public link</Label>
-            <div className="flex gap-2">
-              <Input
-                value={publicUrl}
-                readOnly
-                className="flex-1"
+    <div className="space-y-6">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col items-center justify-center space-y-4">
+        <AnimatePresence mode="wait">
+          {qrCodeDataURL ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-3 bg-white rounded-xl shadow-sm border border-slate-100"
+            >
+              <img
+                src={qrCodeDataURL}
+                alt={`QR code for ${formTitle}`}
+                className="w-48 h-48 object-contain"
               />
-              <Button onClick={copyToClipboard} size="sm" variant="secondary" aria-label="Copy form link">
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <a href={publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open public form">
-                  <Share className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Anyone with this link can open and submit the form.</p>
-          </div>
-
-          {/* QR Code */}
-          <div className="space-y-2">
-            <Label>QR code</Label>
-            <div className="flex flex-col items-center gap-3">
-              {qrCodeDataURL && (
-                <div className="p-3 rounded-md border bg-card">
-                  <img 
-                    src={qrCodeDataURL} 
-                    alt={`QR code for ${formTitle}`} 
-                    loading="lazy"
-                    className="w-40 h-40 md:w-48 md:h-48"
-                  />
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Button onClick={downloadQRCode} variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-                <Button onClick={shareForm} size="sm" variant="secondary">
-                  <Share className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground text-center">Scan with any device to open instantly.</p>
-          </div>
+            </motion.div>
+          ) : (
+            <div className="w-48 h-48 bg-slate-200 animate-pulse rounded-xl" />
+          )}
+        </AnimatePresence>
+        <div className="flex gap-2 w-full justify-center">
+          <Button variant="outline" size="sm" onClick={downloadQRCode} className="w-1/2">
+            <Download className="h-4 w-4 mr-2" />
+            Save Image
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-slate-700">Public Form URL</Label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              value={publicUrl}
+              readOnly
+              className="pr-10 bg-slate-50 border-slate-200 text-slate-600 font-mono text-sm"
+            />
+          </div>
+          <Button onClick={copyToClipboard} className={`${copied ? 'bg-green-600 hover:bg-green-700' : ''} min-w-[100px] transition-all`}>
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </>
+            )}
+          </Button>
+        </div>
+        <div className="flex justify-between items-center pt-2">
+          <Button variant="ghost" size="sm" asChild className="text-slate-500 hover:text-slate-900">
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+              Test Link
+            </a>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={shareNative} className="text-slate-500 hover:text-slate-900">
+            <Share2 className="h-3.5 w-3.5 mr-1.5" />
+            Share via...
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

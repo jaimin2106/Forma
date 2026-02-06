@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, FileText, Users, Target } from 'lucide-react';
 
@@ -8,10 +7,10 @@ interface AnalyticsSummaryProps {
   avgCompletionRate: number;
 }
 
-export function AnalyticsSummary({ 
-  totalForms, 
-  totalResponses, 
-  avgCompletionRate 
+export function AnalyticsSummary({
+  totalForms,
+  totalResponses,
+  avgCompletionRate
 }: AnalyticsSummaryProps) {
   const stats = [
     {
@@ -23,7 +22,7 @@ export function AnalyticsSummary({
     },
     {
       title: 'Total Responses',
-      value: totalResponses,
+      value: totalResponses.toLocaleString(),
       icon: Users,
       change: '+23%',
       positive: true
@@ -45,27 +44,31 @@ export function AnalyticsSummary({
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      {stats.map((stat) => (
-        <Card key={stat.title} className="group hover:shadow-md transition-all duration-200 hover:-translate-y-1 border-border/60 bg-card">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">
-                  {stat.title}
-                </p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {stat.value}
-                </p>
-                <p className={`text-xs mt-1 flex items-center ${
-                  stat.positive ? 'text-emerald-600' : 'text-red-600'
-                }`}>
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  {stat.change}
-                </p>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {stats.map((stat, i) => (
+        <Card
+          key={stat.title}
+          className="group border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-violet-200 hover:bg-[rgba(139,92,246,0.02)] transition-all duration-150 ease-out rounded-xl"
+        >
+          <CardContent className="px-6 py-5">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                {stat.title}
+              </p>
+              <div className="p-2 rounded-lg bg-violet-50 text-violet-600 group-hover:bg-violet-100 group-hover:scale-110 transition-all duration-200">
+                <stat.icon className="h-4 w-4" />
               </div>
-              <div className="p-3 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <stat.icon className="h-5 w-5 text-primary" />
+            </div>
+
+            <div className="flex items-end gap-3 mt-1">
+              <p className="text-3xl font-bold text-slate-900 leading-none">
+                {stat.value}
+              </p>
+
+              <div className={`flex items-center px-2 h-6 rounded-md text-[11px] font-bold ${stat.positive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                }`}>
+                <TrendingUp className="h-3 w-3 mr-1" />
+                {stat.change}
               </div>
             </div>
           </CardContent>

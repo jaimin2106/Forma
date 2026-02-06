@@ -1,78 +1,125 @@
+"use client";
 
+import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Layers, LayoutGrid, BarChart2, CheckCircle2 } from "lucide-react";
+import { motion, useInView } from "framer-motion";
 
+// --- Data & Types ---
 interface FinalCTASectionProps {
-  user: any;
+    user: any;
 }
 
-export const FinalCTASection = ({ user }: FinalCTASectionProps) => {
-  return (
-    <section className="relative py-24 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_50%)]" />
-      
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-16 h-16 bg-white/10 rounded-full animate-pulse delay-1000" />
-      
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 shadow-lg mb-8">
-            <Sparkles className="h-4 w-4 text-white" />
-            <span className="text-sm font-medium text-white">Join 10,000+ happy users</span>
-          </div>
-          
-          {/* Main Headline */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Start Building Smarter
-            <br />
-            Forms Today
-          </h2>
-          
-          {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of teams who trust FormBuilder to collect, analyze, and act on their data.
-          </p>
-          
-          {/* CTA Button */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {!user && (
-              <Link to="/auth">
-                <Button 
-                  size="lg" 
-                  className="text-lg px-8 py-4 bg-white text-indigo-600 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  Get Started – It's Free!
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            )}
-          </div>
-          
-          {/* Trust Indicators */}
-          <div className="mt-12 pt-8 border-t border-white/20">
-            <p className="text-white/80 text-sm mb-4">No credit card required • Free forever plan available</p>
-            <div className="flex justify-center items-center gap-8 text-white/60">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm">99.9% Uptime</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span className="text-sm">GDPR Compliant</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                <span className="text-sm">24/7 Support</span>
-              </div>
+const freePlanFeatures = [
+    { icon: Layers, title: "Unlimited Forms", description: "Create as many forms as you need, with no limits." },
+    { icon: LayoutGrid, title: "3,000+ Templates", description: "Get a head start with a massive library of ready-to-use templates." },
+    { icon: BarChart2, title: "Collect Responses", description: "Start gathering valuable data and insights from your audience right away." },
+];
+
+// --- Sub-Components ---
+const FeatureCard = ({ icon: Icon, title, description }: typeof freePlanFeatures[0]) => {
+    const cardVariants = {
+        hidden: { opacity: 0, y: 40, scale: 0.9 },
+        visible: { opacity: 1, y: 0, scale: 1, transition: { stiffness: 100, damping: 15 } }
+    };
+
+    return (
+        <motion.div variants={cardVariants} whileHover={{ y: -8 }} className="relative p-8 bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl text-center group shadow-sm hover:shadow-xl transition-all duration-300">
+            <div className="w-16 h-16 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                <Icon className="w-8 h-8" />
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+            <h3 className="text-lg font-bold text-gray-900 mb-3">{title}</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
+        </motion.div>
+    );
+};
+
+
+// --- Main Section Component ---
+export const FinalCTASection = ({ user }: FinalCTASectionProps) => {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, amount: 0.2 });
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+    };
+
+    return (
+        <section ref={ref} className="bg-white py-24 sm:py-32 relative overflow-hidden">
+            <div className="absolute inset-0 w-full h-full -z-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.1),_transparent_70%)]" />
+                <motion.div
+                    className="absolute top-0 left-0 w-[600px] h-[600px] bg-violet-100/40 rounded-full blur-3xl opacity-60"
+                    animate={{ scale: [1, 1.1, 1], x: [0, 30, 0] }}
+                    transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+                />
+                <motion.div
+                    className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-sky-100/40 rounded-full blur-3xl opacity-60"
+                    animate={{ scale: [1, 1.1, 1], y: [0, -30, 0] }}
+                    transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut', delay: 5 }}
+                />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                    className="text-center"
+                >
+                    <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 tracking-tight">
+                        Try Forma for free
+                    </h2>
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-16 leading-relaxed">
+                        Our Free Plan has everything you need to start creating beautiful, effective forms today. No credit card required.
+                    </p>
+                </motion.div>
+
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate={isInView ? "visible" : "hidden"}
+                    className="grid md:grid-cols-3 gap-8 mb-20 max-w-5xl mx-auto"
+                >
+                    {freePlanFeatures.map((feature) => (
+                        <FeatureCard key={feature.title} {...feature} />
+                    ))}
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    className="flex flex-col items-center justify-center"
+                >
+                    {user ? (
+                        <Link to="/dashboard">
+                            <Button size="lg" className="group bg-gray-900 text-white hover:bg-gray-800 text-lg px-10 py-7 rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all duration-300">
+                                Go to Dashboard <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Button>
+                        </Link>
+                    ) : (
+                        <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                            <Link to="/auth" className="w-full">
+                                <Button
+                                    size="lg"
+                                    className="group w-full bg-gray-900 text-white hover:bg-gray-800 text-lg px-8 py-7 rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all duration-300"
+                                >
+                                    Sign up for free
+                                    <ArrowRight className="ml-2 h-5 w-5 transform transition-transform group-hover:translate-x-1" />
+                                </Button>
+                            </Link>
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <CheckCircle2 size={16} className="text-green-500" /> No credit card required
+                                <span className="mx-2">•</span>
+                                <CheckCircle2 size={16} className="text-green-500" /> Cancel anytime
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            </div>
+        </section>
+    );
 };
