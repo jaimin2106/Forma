@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import Index from "./pages/Index";
+import ResetPassword from "./pages/ResetPassword";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Templates from "./pages/Templates";
@@ -27,14 +28,15 @@ import HR from "./pages/solutions/HR";
 import Blog from "./pages/resources/Blog";
 import HelpCenter from "./pages/resources/HelpCenter";
 import Community from "./pages/resources/Community";
+import { CookieBanner } from "./components/legal/CookieBanner";
 
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
   const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
-    // Hide navbar on App routes (Dashboard, Anth, Forms)
-    const hideNavbarRoutes = ['/dashboard', '/auth', '/forms'];
+    // Hide navbar on App routes (Dashboard, Auth, Forms, ResetPassword)
+    const hideNavbarRoutes = ['/dashboard', '/auth', '/forms', '/reset-password'];
     const showNavbar = !hideNavbarRoutes.some(route => location.pathname.startsWith(route));
 
     return (
@@ -58,6 +60,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/templates" element={<Templates />} />
                 <Route path="/enterprise" element={<Enterprise />} />
@@ -85,6 +88,7 @@ const App: React.FC = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
+            <CookieBanner />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

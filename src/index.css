@@ -120,4 +120,138 @@
   .shadow-glow {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
   }
+
+  /* Enterprise Builder Design System */
+  
+  /* Builder Card Styles */
+  .builder-card {
+    @apply bg-white rounded-2xl border border-slate-200/60 transition-all duration-200;
+    padding: var(--builder-card-padding, 28px);
+  }
+
+  .builder-card-active {
+    @apply bg-[#F8FAFF] border-slate-900 shadow-lg ring-1 ring-slate-900/5;
+    border-width: 2px;
+  }
+
+  .builder-card-hover {
+    @apply shadow-md -translate-y-0.5;
+  }
+
+  .builder-card-dragging {
+    @apply shadow-xl scale-[1.02] z-50 opacity-95;
+  }
+
+  /* Drag Handle */
+  .drag-handle {
+    @apply text-slate-300 cursor-grab transition-all duration-150;
+  }
+
+  .drag-handle:hover {
+    @apply text-slate-500 scale-110;
+  }
+
+  .drag-handle:active {
+    @apply cursor-grabbing text-slate-600;
+  }
+
+  /* Drop Indicator */
+  .drop-indicator {
+    @apply h-0.5 bg-slate-900 rounded-full mx-4 opacity-0 transition-opacity duration-100;
+  }
+
+  .drop-indicator-active {
+    @apply opacity-100;
+  }
+
+  /* Focus States */
+  .builder-focus-ring {
+    @apply outline-none ring-2 ring-slate-900/20 ring-offset-2;
+  }
+
+  /* Insertion Point */
+  .insertion-point {
+    @apply h-8 -my-2 flex items-center justify-center opacity-0 transition-all duration-150;
+  }
+
+  .insertion-point:hover {
+    @apply opacity-100;
+  }
+
+  /* Autosave Indicator */
+  .autosave-indicator {
+    @apply flex items-center gap-1.5 text-xs font-medium transition-colors duration-200;
+  }
+
+  .autosave-saved {
+    @apply text-emerald-600;
+  }
+
+  .autosave-saving {
+    @apply text-slate-500;
+  }
+
+  .autosave-unsaved {
+    @apply text-amber-600;
+  }
+
+  /* Floating Action Button - positioned above bottom nav on mobile */
+  .floating-fab {
+    @apply fixed bottom-24 md:bottom-6 right-6 w-14 h-14 rounded-full bg-slate-900 text-white shadow-xl flex items-center justify-center transition-all duration-200 z-40;
+  }
+
+  .floating-fab:hover {
+    @apply bg-slate-800 scale-105 shadow-2xl;
+  }
+
+  .floating-fab:active {
+    @apply scale-95;
+  }
+
+  /* Safe area for iOS devices with notch/home indicator */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
+
+/* Builder-specific animations */
+@keyframes builder-lift {
+  0% { transform: scale(1); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  100% { transform: scale(1.02); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+}
+
+@keyframes builder-drop {
+  0% { transform: scale(1.02); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(15, 23, 42, 0.3); }
+  70% { box-shadow: 0 0 0 6px rgba(15, 23, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 23, 42, 0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-builder-lift {
+  animation: builder-lift 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-builder-drop {
+  animation: builder-drop 200ms ease-out forwards;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1s ease-out;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+

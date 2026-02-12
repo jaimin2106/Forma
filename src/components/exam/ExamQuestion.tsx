@@ -1,10 +1,10 @@
 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { FloatingLabelInput } from '@/components/ui/floating-label-input';
+
+import { OptimizedInput } from '@/components/ui/optimized-input';
 import { motion } from 'framer-motion';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -111,43 +111,53 @@ export function ExamQuestion({
 
       case 'dropdown':
         return (
-          <Select value={value} onValueChange={onChange} disabled={disabled}>
-            <SelectTrigger className="w-full text-lg h-14 rounded-xl border-2 focus:ring-slate-900">
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((option: string) => (
-                <SelectItem key={option} value={option} className="text-lg">
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1.5 w-full">
+            <Label className="block text-sm font-medium text-slate-700 ml-1">
+              {question.title}
+              {question.required && <span className="text-violet-600 ml-0.5">*</span>}
+            </Label>
+            <Select value={value} onValueChange={onChange} disabled={disabled}>
+              <SelectTrigger className="w-full text-base md:text-lg bg-white border border-slate-200 rounded-xl px-4 py-3 h-auto focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 transition-all duration-200">
+                <SelectValue placeholder="Select an option" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-slate-100 shadow-xl rounded-xl">
+                {options.map((option: string) => (
+                  <SelectItem key={option} value={option} className="text-base py-2.5 px-4 focus:bg-slate-50 focus:text-slate-900 cursor-pointer">
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         );
+
 
       case 'text':
       case 'email':
       case 'number':
         return (
-          <FloatingLabelInput
+          <OptimizedInput
             id={question.id}
             label={question.title}
             type={question.type}
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="text-xl h-16"
+            className="text-lg"
           />
         );
 
+
       case 'textarea':
         return (
-          <Textarea
+          <OptimizedInput
+            label="Your Answer"
             placeholder="Type your answer here..."
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="min-h-[150px] text-lg rounded-xl border-2 focus-visible:ring-slate-900"
+            multiline
+            className="min-h-[150px] text-lg"
           />
         );
 
@@ -173,16 +183,17 @@ export function ExamQuestion({
           </div>
         );
 
+
       case 'date':
         return (
-          <FloatingLabelInput
+          <OptimizedInput
             id={question.id}
             label="Select Date"
             type="date"
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="text-xl h-16"
+            className="text-lg"
           />
         );
 

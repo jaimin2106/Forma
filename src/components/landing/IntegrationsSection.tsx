@@ -1,33 +1,79 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Link } from "lucide-react";
+import { ArrowRight, Link2 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 
-// --- Data for Integration Icons ---
-// For a real app, you'd use actual SVG logos
+// --- Integration Data with SVG Logos ---
 const integrations = [
-    { name: "Slack", color: "bg-[#4A154B]", initial: "S" },
-    { name: "Google Drive", color: "bg-[#1DA564]", initial: "G" },
-    { name: "Salesforce", color: "bg-[#00A1E0]", initial: "Sf" },
-    { name: "Mailchimp", color: "bg-[#FFE01B]", initial: "M", textColor: "text-black" },
-    { name: "Zapier", color: "bg-[#FF4A00]", initial: "Z" },
-    { name: "Notion", color: "bg-black", initial: "N" },
-    { name: "HubSpot", color: "bg-[#FF7A59]", initial: "H" },
-    { name: "Trello", color: "bg-[#0079BF]", initial: "T" },
+    {
+        name: "Slack",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/slack/slack-original.svg"
+    },
+    {
+        name: "Google Drive",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+    },
+    {
+        name: "Salesforce",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg"
+    },
+    {
+        name: "Notion",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/notion/notion-original.svg"
+    },
+    {
+        name: "Trello",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/trello/trello-plain.svg"
+    },
+    {
+        name: "GitHub",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
+    },
+    {
+        name: "Jira",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg"
+    },
+    {
+        name: "Figma",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg"
+    },
+    {
+        name: "Dropbox",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dropbox/dropbox-original.svg"
+    },
+    {
+        name: "VS Code",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
+    },
+    {
+        name: "Firebase",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg"
+    },
+    {
+        name: "MongoDB",
+        logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg"
+    }
 ];
 
-const AppIcon = ({ icon, index, radius, total }: { icon: any; index: number; radius: number, total: number }) => {
-    const angle = (index / total) * 2 * Math.PI;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
+// --- Integration Logo Component ---
+const IntegrationLogo = ({ integration }: { integration: typeof integrations[0] }) => {
     return (
         <motion.div
-            key={icon.name}
-            className={`absolute w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-lg border-2 border-white/50 ${icon.color} ${icon.textColor || ''}`}
-            style={{ top: '50%', left: '50%', margin: '-32px 0 0 -32px', x, y }}
-            whileHover={{ scale: 1.15, zIndex: 10 }}
+            whileHover={{ scale: 1.1, y: -4 }}
+            className="flex-shrink-0 group cursor-pointer"
+            title={integration.name}
         >
-            {icon.initial}
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center p-3 group-hover:shadow-lg group-hover:border-violet-200 transition-all duration-300">
+                <img
+                    src={integration.logo}
+                    alt={integration.name}
+                    className="w-full h-full object-contain grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100 transition-all duration-300"
+                    loading="lazy"
+                />
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {integration.name}
+            </p>
         </motion.div>
     );
 };
@@ -37,15 +83,19 @@ export const IntegrationsSection = () => {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-    const innerOrbit = integrations.slice(0, 4);
-    const outerOrbit = integrations.slice(4, 8);
+    const containerVariants = {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+    };
 
-    const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.2, delayChildren: 0.2 } } };
-    const itemVariants = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { stiffness: 100, damping: 15 } } };
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     return (
-        <section ref={ref} className="bg-white py-24 sm:py-32 relative overflow-hidden">
-            <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.05),_transparent_70%)] -z-10" />
+        <section ref={ref} className="bg-slate-50 py-20 sm:py-24 relative overflow-hidden">
+            <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.03),_transparent_70%)] -z-10" />
 
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 <motion.div
@@ -54,90 +104,62 @@ export const IntegrationsSection = () => {
                     animate={isInView ? "visible" : "hidden"}
                     className="text-center"
                 >
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-600 text-sm font-medium mb-6">
-                        <Link size={16} /><span>Powerful Connections</span>
+                    <motion.div
+                        variants={itemVariants}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-600 text-sm font-medium mb-6"
+                    >
+                        <Link2 size={16} />
+                        <span>100+ Integrations</span>
                     </motion.div>
-                    <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
-                        Integrate with the tools you already love.
+
+                    <motion.h2
+                        variants={itemVariants}
+                        className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight"
+                    >
+                        Connect with tools you already love
                     </motion.h2>
-                    <motion.p variants={itemVariants} className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                        Connect Forma with hundreds of apps like Slack, Google Sheets, and Salesforce to automate workflows, move data seamlessly, and save valuable time.
+
+                    <motion.p
+                        variants={itemVariants}
+                        className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+                    >
+                        Seamlessly integrate Forma with Slack, Google Sheets, Salesforce, and hundreds more to automate your workflows.
                     </motion.p>
                 </motion.div>
 
+                {/* Horizontal Scrollable Integration Strip */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.5 }}
-                    className="relative w-full h-[600px] mt-16 flex items-center justify-center"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="mt-12 relative"
                 >
-                    {/* Central Hub */}
-                    <div className="relative w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl z-20 border border-gray-100">
-                        <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl">
-                            F
-                        </div>
+                    {/* Gradient Fade Edges */}
+                    <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
+                    <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
+
+                    {/* Scrollable Container */}
+                    <div className="flex items-center gap-6 overflow-x-auto py-4 px-8 scrollbar-hide">
+                        {integrations.map((integration) => (
+                            <IntegrationLogo key={integration.name} integration={integration} />
+                        ))}
                     </div>
-
-                    {/* Orbit Rings */}
-                    <div className="absolute w-[384px] h-[384px] rounded-full border border-dashed border-gray-200" />
-                    <div className="absolute w-[500px] h-[500px] rounded-full border border-dashed border-gray-200" />
-
-                    {/* Inner Orbit */}
-                    <motion.div
-                        className="absolute w-[384px] h-[384px]"
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 40, ease: 'linear' }}
-                    >
-                        {innerOrbit.map((icon, index) => (
-                            <motion.div
-                                key={icon.name}
-                                style={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: `rotate(${(index / innerOrbit.length) * 360}deg) translateX(192px) rotate(-${(index / innerOrbit.length) * 360}deg)` // Counter-rotate to keep icon upright if needed, but here we rotate the whole container so icons rotate with it. To keep icons upright, we'd need to counter-rotate them individually.
-                                }}
-                            >
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg text-white shadow-lg border-2 border-white ${icon.color} ${icon.textColor || ''} -ml-7 -mt-7 transform hover:scale-110 transition-transform`}>
-                                    {icon.initial}
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-
-                    {/* Outer Orbit */}
-                    <motion.div
-                        className="absolute w-[500px] h-[500px]"
-                        animate={{ rotate: -360 }}
-                        transition={{ repeat: Infinity, duration: 60, ease: 'linear' }}
-                    >
-                        {outerOrbit.map((icon, index) => (
-                            <motion.div
-                                key={icon.name}
-                                style={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: `rotate(${(index / outerOrbit.length) * 360}deg) translateX(250px) rotate(-${(index / outerOrbit.length) * 360}deg)`
-                                }}
-                            >
-                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-lg border-2 border-white ${icon.color} ${icon.textColor || ''} -ml-8 -mt-8 transform hover:scale-110 transition-transform`}>
-                                    {icon.initial}
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
                 </motion.div>
 
+                {/* CTA */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                    className="text-center mt-12"
+                    transition={{ duration: 0.6, delay: 0.5 }}
+                    className="text-center mt-10"
                 >
-                    <Button size="lg" className="group bg-gray-900 text-white hover:bg-gray-800 text-base px-8 py-6 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        className="group border-gray-300 text-gray-700 hover:bg-white hover:border-gray-400 text-base px-6 py-5 rounded-full font-semibold transition-all duration-300"
+                    >
                         Browse all integrations
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </Button>
                 </motion.div>
             </div>

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Forma - AI Powered Decision Intelligence & Forms
 
 ![Forma Banner](public/og-image.jpg)
@@ -47,3 +48,7 @@ Forma is a cutting-edge platform designed to revolutionize data collection and d
 ## License
 
 © 2025 Forma. All rights reserved.
+=======
+# Forma
+Forma - Al Powered Decision Intelligence &amp; Forms Empower your business with Forma, the leading Al-powered decision analysis platform and smart form builder.
+>>>>>>> 4fc4d6323cc30ef19d8bac8c341cf9df88fec75e

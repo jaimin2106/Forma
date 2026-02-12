@@ -73,7 +73,7 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
-			keyframes: {
+		keyframes: {
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -119,6 +119,37 @@ export default {
 						opacity: '1',
 						transform: 'scale(1)'
 					}
+				},
+				// Builder-specific animations
+				'builder-lift': {
+					'0%': {
+						transform: 'scale(1)',
+						boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+					},
+					'100%': {
+						transform: 'scale(1.02)',
+						boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+					}
+				},
+				'builder-drop': {
+					'0%': { transform: 'scale(1.02)' },
+					'50%': { transform: 'scale(0.98)' },
+					'100%': { transform: 'scale(1)' }
+				},
+				'card-appear': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(16px) scale(0.96)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0) scale(1)'
+					}
+				},
+				'pulse-ring': {
+					'0%': { boxShadow: '0 0 0 0 rgba(15, 23, 42, 0.3)' },
+					'70%': { boxShadow: '0 0 0 6px rgba(15, 23, 42, 0)' },
+					'100%': { boxShadow: '0 0 0 0 rgba(15, 23, 42, 0)' }
 				}
 			},
 			animation: {
@@ -126,7 +157,24 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'slide-up': 'slide-up 0.6s ease-out',
-				'scale-in': 'scale-in 0.4s ease-out'
+				'scale-in': 'scale-in 0.4s ease-out',
+				// Builder-specific
+				'builder-lift': 'builder-lift 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+				'builder-drop': 'builder-drop 200ms ease-out forwards',
+				'card-appear': 'card-appear 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+				'pulse-ring': 'pulse-ring 1s ease-out'
+			},
+			// Builder-specific transition durations
+			transitionDuration: {
+				'150': '150ms',
+				'200': '200ms',
+			},
+			// Builder-specific box shadows
+			boxShadow: {
+				'builder-card': '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)',
+				'builder-card-hover': '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
+				'builder-card-active': '0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)',
+				'builder-card-drag': '0 25px 50px -12px rgba(0,0,0,0.25)'
 			}
 		}
 	},

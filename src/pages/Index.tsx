@@ -12,6 +12,8 @@ import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { TestimonialSection } from "@/components/landing/TestimonialSection";
 import { FinalCTASection } from "@/components/landing/FinalCTASection";
 import { Footer } from "@/components/landing/Footer";
+import { StickyCtaBar } from "@/components/landing/StickyCtaBar";
+
 
 
 
@@ -33,7 +35,8 @@ const Index = () => {
       <HowItWorksSection />
       <TestimonialSection />
       <FinalCTASection user={user} />
-      <Footer/>
+      <Footer />
+      <StickyCtaBar />
     </div>
   );
 };

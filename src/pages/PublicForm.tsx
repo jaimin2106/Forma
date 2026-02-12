@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Check, ChevronRight, ChevronLeft, ArrowRight, CornerDownLeft } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, ArrowRight, CornerDownLeft, Shield, Clock, Mail } from 'lucide-react';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { ExamTimer } from '@/components/exam/ExamTimer';
 import { ExamQuestion } from '@/components/exam/ExamQuestion';
@@ -31,6 +31,8 @@ interface ExamResult {
 
 export default function PublicForm() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isEmbedded = searchParams.get('embed') === 'true';
   const { user, loading: authLoading } = useAuth();
   const [form, setForm] = useState<Form | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -166,10 +168,86 @@ export default function PublicForm() {
     return { score, totalPoints, percentage, passed };
   };
 
+  // Generate idempotency key to prevent duplicate submissions
+  const generateIdempotencyKey = () => {
+    return `${id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  };
+
+  // Check if this form was already submitted in this session
+  const isAlreadySubmitted = () => {
+    const submittedForms = sessionStorage.getItem('submitted_forms');
+    if (!submittedForms) return false;
+    const parsed = JSON.parse(submittedForms);
+    return parsed.includes(id);
+  };
+
+  // Mark form as submitted in session
+  const markAsSubmitted = () => {
+    const submittedForms = sessionStorage.getItem('submitted_forms');
+    const parsed = submittedForms ? JSON.parse(submittedForms) : [];
+    if (!parsed.includes(id)) {
+      parsed.push(id);
+      sessionStorage.setItem('submitted_forms', JSON.stringify(parsed));
+    }
+  };
+
+  // Retry wrapper with exponential backoff
+  const submitWithRetry = async (
+    submitFn: () => Promise<string | null>,
+    maxRetries: number = 3
+  ): Promise<string | null> => {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const result = await submitFn();
+        return result;
+      } catch (err: any) {
+        lastError = err;
+
+        // Don't retry on validation/authorization errors
+        const errorMessage = err?.message?.toLowerCase() || '';
+        if (errorMessage.includes('unauthorized') ||
+          errorMessage.includes('validation') ||
+          errorMessage.includes('not found') ||
+          errorMessage.includes('permission')) {
+          throw err;
+        }
+
+        // Retry with exponential backoff for network errors
+        if (attempt < maxRetries - 1) {
+          const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+          toast({
+            title: "Connection issue",
+            description: `Retrying in ${delay / 1000}s... (Attempt ${attempt + 2}/${maxRetries})`,
+            duration: delay,
+          });
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError || new Error('Failed after multiple retries');
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!form) return;
     if (form.is_quiz && !submitting && e) { setShowConfirmModal(true); return; }
+
+    // Prevent duplicate submissions
+    if (isAlreadySubmitted()) {
+      toast({
+        title: "Already Submitted",
+        description: "You have already submitted this form. Refresh to submit again.",
+        variant: "default"
+      });
+      setSubmitted(true);
+      return;
+    }
+
+    // Prevent double-click during submission
+    if (submitting) return;
 
     setSubmitting(true);
     try {
@@ -179,18 +257,22 @@ export default function PublicForm() {
         answer: formData[q.id] || null
       }));
 
-      // Use RPC to submit transactionally and bypass RLS constraints for anon users
-      // Cast to any to bypass type check for manual RPC
-      const { data: responseId, error } = await (supabase as any).rpc('submit_form_response', {
-        p_form_id: form.id,
-        p_respondent_email: form.collect_email ? email : null,
-        p_answers: answersJson
+      // Submit with retry logic
+      const responseId = await submitWithRetry(async () => {
+        const { data, error } = await (supabase as any).rpc('submit_form_response', {
+          p_form_id: form.id,
+          p_respondent_email: form.collect_email ? email : null,
+          p_answers: answersJson
+        });
+
+        if (error) throw error;
+        return data as string;
       });
 
-      if (error) throw error;
+      // Mark as submitted to prevent duplicates
+      markAsSubmitted();
 
       // If it's a quiz, save the attempt separately
-      // (The quiz_attempts policy checks form status, not response visibility, so this works independently)
       if (form.is_quiz && responseId) {
         const result = calculateScore(formData);
         setExamResult(result);
@@ -206,11 +288,29 @@ export default function PublicForm() {
       } else {
         setSubmitted(true);
       }
-    } catch (err: any) {
-      console.error(err);
+
       toast({
-        title: "Error",
-        description: err.message || "Failed to submit. Please try again.",
+        title: "✓ Submitted",
+        description: "Your response has been saved successfully.",
+      });
+    } catch (err: any) {
+      console.error('Submission error:', err);
+
+      // Provide specific error messages
+      const errorMessage = err?.message?.toLowerCase() || '';
+      let userMessage = "Failed to submit. Please try again.";
+
+      if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userMessage = "Network error. Please check your connection and try again.";
+      } else if (errorMessage.includes('timeout')) {
+        userMessage = "Request timed out. Please try again.";
+      } else if (err?.message) {
+        userMessage = err.message;
+      }
+
+      toast({
+        title: "Submission Failed",
+        description: userMessage,
         variant: "destructive"
       });
     } finally {
@@ -276,76 +376,128 @@ export default function PublicForm() {
     );
   }
 
-  // --- Minimal Header --- (Logo + Sign In only)
-  const Header = () => (
-    <header className="fixed top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-sm border-b border-slate-100/50">
-      <Logo />
-      <div className="flex items-center gap-4">
-        {!user ? (
-          <Button asChild variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-slate-900">
-            <Link to="/auth">Login</Link>
-          </Button>
-        ) : (
-          <Button asChild variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-slate-900">
-            <Link to="/dashboard">Dashboard</Link>
-          </Button>
-        )}
-      </div>
-    </header>
-  );
+  // --- Minimal Header --- (Logo + Sign In only) - Hidden when embedded
+  const Header = () => {
+    if (isEmbedded) return null;
+    return (
+      <header className="fixed top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-sm border-b border-slate-100/50">
+        <Logo />
+        <div className="flex items-center gap-4">
+          {!user ? (
+            <Button asChild variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-slate-900">
+              <Link to="/auth">Login</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-slate-900">
+              <Link to="/dashboard">Dashboard</Link>
+            </Button>
+          )}
+        </div>
+      </header>
+    );
+  };
 
-  const Footer = () => (
-    <footer className="py-8 text-center bg-white/50 backdrop-blur-sm">
-      <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors bg-slate-100/50 px-3 py-1.5 rounded-full hover:bg-slate-100">
-        <span>Powered by</span>
-        <span className="font-bold text-slate-700">Forma</span>
-      </a>
-    </footer>
-  );
+  const Footer = () => {
+    if (isEmbedded) return null;
+    return (
+      <footer className="py-8 text-center bg-white/50 backdrop-blur-sm">
+        <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors bg-slate-100/50 px-3 py-1.5 rounded-full hover:bg-slate-100">
+          <span>Powered by</span>
+          <span className="font-bold text-slate-700">Forma</span>
+        </a>
+      </footer>
+    );
+  };
 
   // --- Start Screen ---
   if (!examStarted) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
         <Header />
-        <div className="flex-1 flex flex-col justify-center items-center p-6 max-w-2xl mx-auto w-full">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 text-center sm:text-left w-full">
-            <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 leading-[1.1]">{form.title}</h1>
-            {form.description && <p className="text-xl text-slate-500 font-light leading-relaxed">{form.description}</p>}
+        <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full max-w-[520px] bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-white/20 ring-1 ring-slate-900/5 overflow-hidden"
+          >
+            {/* Top Decoration */}
+            <div className="h-2 w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600" />
 
-            {form.collect_email && (
-              <div className="pt-4 max-w-md">
-                <OptimizedInput
-                  label="Your Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                />
+            <div className="p-8 sm:p-12 space-y-10">
+              {/* Header Section */}
+              <div className="space-y-3 text-center sm:text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight tracking-tight">
+                  {form.title || "Untitled Form"}
+                </h1>
+                {form.description && (
+                  <p className="text-lg text-slate-500 font-light leading-relaxed">
+                    {form.description}
+                  </p>
+                )}
+
+                {/* Trust Indicators */}
+                <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-slate-400 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span>~2 mins to complete</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-4 h-4" />
+                    <span>Secure submission</span>
+                  </div>
+                </div>
               </div>
-            )}
 
-            <div className="pt-8 flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-              <Button
-                size="lg"
-                onClick={() => {
-                  if (form.collect_email && !email) {
-                    toast({ title: "Email Required", description: "Please enter your email.", variant: "destructive" });
-                    return;
-                  }
-                  setExamStarted(true);
-                }}
-                className="h-14 px-8 text-lg rounded-xl bg-slate-900 text-white hover:bg-slate-800 hover:scale-105 transition-all duration-300 shadow-xl shadow-slate-200"
-              >
-                Get Started <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <div className="text-sm text-slate-400 flex items-center gap-1 py-4 px-2">
-                <span className="hidden sm:inline">Press</span>
-                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-semibold bg-slate-100 border border-slate-200 rounded-md">Enter ↵</kbd>
+              {/* Input Section */}
+              {form.collect_email && (
+                <div className="space-y-6">
+                  <OptimizedInput
+                    label="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    type="email"
+                    required
+                    startAdornment={<Mail className="w-5 h-5" />}
+                    helperText="We'll send a copy of your response to this email."
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {/* Action Section */}
+              <div className="pt-2 space-y-4">
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    if (form.collect_email && !email) {
+                      toast({ title: "Email Required", description: "Please enter your email to continue.", variant: "destructive" });
+                      return;
+                    }
+                    setExamStarted(true);
+                  }}
+                  className="w-full h-14 text-lg font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-slate-900/20 group"
+                >
+                  <span className="mr-2">Begin Submission</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <p className="text-center text-xs text-slate-400">
+                  By continuing, you agree to our Terms of Service and Privacy Policy.
+                </p>
               </div>
             </div>
           </motion.div>
+
+          {/* Mobile Keyboard Helper (Hidden on Desktop) */}
+          <div className="mt-6 text-sm text-slate-400 hidden sm:flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <span>Press</span>
+            <kbd className="px-2 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-md shadow-sm text-slate-500">Enter ↵</kbd>
+            <span>to start</span>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -387,13 +539,12 @@ export default function PublicForm() {
 
             {/* Input Area */}
             <div className="pt-4 pb-8 min-h-[120px]">
-              {currentQ.type === 'text' || currentQ.type === 'textarea' || currentQ.type === 'number' || currentQ.type === 'email' || currentQ.type === 'dropdown' ? (
+              {currentQ.type === 'text' || currentQ.type === 'textarea' || currentQ.type === 'number' || currentQ.type === 'email' ? (
                 <OptimizedInput
                   value={formData[currentQ.id] || ''}
                   onChange={(e) => handleInputChange(currentQ.id, e.target.value)}
                   multiline={currentQ.type === 'textarea'}
-                  options={currentQ.type === 'dropdown' ? (typeof currentQ.options === 'string' ? JSON.parse(currentQ.options) : (currentQ.options as string[])) : undefined}
-                  placeholder={currentQ.type === 'dropdown' ? "Select an option" : "Type your answer here..."}
+                  placeholder="Type your answer here..."
                   type={currentQ.type === 'number' ? 'number' : currentQ.type === 'email' ? 'email' : 'text'}
                   autoFocus
                 />
